@@ -10,8 +10,10 @@ import (
 	"github.com/gofiber/template/html/v2"
 	"github.com/gofiber/websocket/v2"
 	"github.com/joho/godotenv"
+	"github.com/vricap/ssshh/database"
 	"golang.ngrok.com/ngrok/v2"
-	// "github.com/vricap/ssshh/handlers"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const HOST = "http://localhost"
@@ -22,6 +24,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load .env file: %v", err)
 	}
+
+	DB := database.Connect()
+	database.RunMigrations(DB)
+	defer DB.Close()
 
 	// run ngrok
 	ctx := context.Background()
@@ -48,7 +54,7 @@ func main() {
 	// create new websocket
 	server := NewWebSocket()
 	app.Get("/ws", websocket.New(func(ctx *websocket.Conn) {
-		server.HandleWebSocket(ctx)
+		server.HandleWebSocket(ctx, DB)
 	}))
 
 	go server.HandleMessage()
@@ -57,6 +63,11 @@ func main() {
 }
 
 func runNgrok(ctx context.Context) (string, error) {
+	n := os.Getenv("NGROK_AUTHTOKEN")
+	if n == "" {
+		log.Fatalln("NGROK_AUTHTOKEN not found. Make sure to include it in the .env file and provide valid NGROK auth token key.")
+	}
+
 	agent, err := ngrok.NewAgent(ngrok.WithAuthtoken(os.Getenv("NGROK_AUTHTOKEN")))
 	if err != nil {
 		return "", err

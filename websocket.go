@@ -1,9 +1,8 @@
 package main
 
 import (
-	"bytes"
+	"database/sql"
 	"encoding/json"
-	"html/template"
 	"log"
 
 	"github.com/gofiber/websocket/v2"
@@ -21,7 +20,7 @@ func NewWebSocket() *WebSocketServer {
 	}
 }
 
-func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn) {
+func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn, DB *sql.DB) {
 	// register new client
 	s.clients[ctx] = true // FIX: RACE CONDITION ISSUE. HandleMessage could write to the map when at the same time we write new user to the map. Use MUTEX
 	defer func() {
@@ -37,12 +36,17 @@ func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn) {
 		}
 
 		// send the message to the broadcast channel
-		var message Message
+		var message *Message
 		err = json.Unmarshal(msg, &message)
 		if err != nil {
 			log.Fatal("Error Unmarshalling")
 		}
-		s.broadcast <- &message
+		s.broadcast <- message
+
+		err = storeMessageToDB(DB, message)
+		if err != nil {
+			log.Fatalf("Failed to store message to database: %v", err)
+		}
 	}
 }
 
@@ -74,24 +78,14 @@ func marshalMessage(msg *Message) ([]byte, error) {
 	return s, nil
 }
 
-func getMessageTemplate(msg *Message) []byte {
-	base := `
-<div id="messages">
-    <p class="text-small">{{ .Text }}</p>
-</div>
-`
+func storeMessageToDB(DB *sql.DB, message *Message) error {
+	query := `
+	INSERT INTO messages (message, user) VALUES (?, ?)`
 
-	tmpl, err := template.New("msg").Parse(base)
+	_, err := DB.Exec(query, message.Text, message.User)
 	if err != nil {
-		log.Fatalf("template parsing: %s", err)
+		return err
 	}
 
-	// render the template with the message as data
-	var renderedMessage bytes.Buffer
-	err = tmpl.Execute(&renderedMessage, msg)
-	if err != nil {
-		log.Fatalf("template execution: %s", err)
-	}
-
-	return renderedMessage.Bytes()
+	return nil
 }

@@ -12,6 +12,7 @@
 
 <body>
     <p>Public URL: {{ .Public_URL }}</p>
+    <input id="usernameInput" type="text">
     <div class="container">
         <div class="chat-window">
             <div class="messages" id="messages">
@@ -20,7 +21,7 @@
                 <div class="input-area">
                     <input type="text" name="text" min="1" id="messageInput" placeholder="Type a message...">
                 </div>
-                <button type="submit">Send</button>
+                <button disabled class="submitBtn" id="submitBtn" type="submit">Send</button>
             </form>
         </div>
     </div>
@@ -28,6 +29,19 @@
     const form = document.getElementById("form");
     const messageInput = document.getElementById("messageInput");
     const messages = document.getElementById("messages")
+    const submitBtn = document.getElementById("submitBtn")
+    const usernameInput = document.getElementById("usernameInput")
+
+    usernameInput.addEventListener("change", () => {
+      console.log(usernameInput.value)
+
+      if (usernameInput.value === "") {
+        submitBtn.disabled = true
+      } else {
+        submitBtn.disabled = false
+      }
+    })
+
 
     const socket = new WebSocket("{{ .Public_WSURL }}/ws");
     socket.onopen = () => {
@@ -47,7 +61,8 @@
 
       socket.send(
         JSON.stringify({
-          text: messageInput.value
+          text: messageInput.value,
+          user: usernameInput.value
         })
       )
     })

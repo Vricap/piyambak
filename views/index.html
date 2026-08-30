@@ -11,6 +11,7 @@
 </head>
 
 <body>
+    <p>Public URL: {{ .Public_URL }}</p>
     <div class="container">
         <div class="chat-window">
             <div class="messages" id="messages">
@@ -28,7 +29,7 @@
     const messageInput = document.getElementById("messageInput");
     const messages = document.getElementById("messages")
 
-    const socket = new WebSocket("ws://localhost:3000/ws");
+    const socket = new WebSocket("{{ .Public_WSURL }}/ws");
     socket.onopen = () => {
       console.log("Socket Open")
     };

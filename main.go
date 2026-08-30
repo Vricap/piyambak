@@ -1,17 +1,35 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"os/exec"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
 	"github.com/gofiber/websocket/v2"
+	"github.com/joho/godotenv"
+	"golang.ngrok.com/ngrok/v2"
 	// "github.com/vricap/ssshh/handlers"
 )
 
+const HOST = "http://localhost"
+const PORT = ":3000"
+
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Failed to load .env file: %v", err)
+	}
+
+	// run ngrok
+	ctx := context.Background()
+	forwardHTTPSUrl, err := runNgrok(ctx)
+	if err != nil {
+		log.Fatalf("Error running ngrok: %v", err)
+	}
+
 	app := fiber.New(fiber.Config{
 		Views: html.New("./views", ".html"),
 	})
@@ -25,7 +43,7 @@ func main() {
 
 	appHandler := NewHandler()
 
-	app.Get("/", appHandler.HandlerGetIndex)
+	app.Get("/", appHandler.HandlerGetIndex(forwardHTTPSUrl))
 
 	// create new websocket
 	server := NewWebSocket()
@@ -35,23 +53,23 @@ func main() {
 
 	go server.HandleMessage()
 
-	err := startNgrok()
-	if err != nil {
-		log.Fatalf("Error starting ngrok: %v", err)
-	}
-
-	app.Listen(":3000")
+	app.Listen(PORT)
 }
 
-func startNgrok() error {
-	cmd := exec.Command("ngrok", "http", "3000")
-	// cmd.Stdout = log.Writer()
-	cmd.Stderr = log.Writer()
-
-	err := cmd.Start()
+func runNgrok(ctx context.Context) (string, error) {
+	agent, err := ngrok.NewAgent(ngrok.WithAuthtoken(os.Getenv("NGROK_AUTHTOKEN")))
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	ln, err := agent.Forward(ctx,
+		ngrok.WithUpstream(HOST+PORT),
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println("Endpoint online: forwarding from", ln.URL(), "to", HOST+PORT)
+	return ln.URL().String(), nil
 }

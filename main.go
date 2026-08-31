@@ -1,16 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
 	"github.com/joho/godotenv"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/vricap/ssshh/database"
 	"github.com/vricap/ssshh/routes"
 	"github.com/vricap/ssshh/utils"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const HOST = "http://localhost"
@@ -43,6 +44,11 @@ func main() {
 	app := fiber.New(fiber.Config{
 		Views: html.New("./web/views", ".html"),
 	})
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: fmt.Sprintf("http://localhost:3000, %s", utils.NgroxCtx.Url),
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+	}))
 	app.Static("/static", "./web/static")
 	routes.SetupRoutes(app)
 

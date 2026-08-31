@@ -32,6 +32,22 @@
     const submitBtn = document.getElementById("submitBtn")
     const usernameInput = document.getElementById("usernameInput")
 
+    console.log(`{{ .Public_WSURL }}/messages`)
+    fetch(`{{ .Public_URL }}/messages`)
+      .then(res => {
+      if(!res.ok) {
+        return new Error(`HTTP error! status: ${res.status}`)
+      }
+      return res.json()
+    }).then(data => {
+      data.forEach(object => {
+        const messageChild = document.createElement("p")
+        messageChild.textContent = `From ${object.user}: ${object.text} (${object.createdAt})`
+        messages.appendChild(messageChild)
+      })
+    })
+      .catch(err => console.error(err))
+
     usernameInput.addEventListener("change", () => {
       console.log(usernameInput.value)
 
@@ -51,7 +67,7 @@
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
       const messageChild = document.createElement("p")
-      messageChild.textContent = message.text
+      messageChild.textContent = `From ${message.user}: ${message.text} (${message.createdAt})`
       messages.appendChild(messageChild)
 
     };

@@ -41,5 +41,8 @@ func StartNgrok(HOST string, PORT string) error {
 	}
 
 	fmt.Println("Endpoint online: forwarding from", ln.URL(), "to", HOST+PORT)
+	fmt.Println()
+	fmt.Println("COPY / USE THIS URL:", ln.URL())
+
 	return nil
 }

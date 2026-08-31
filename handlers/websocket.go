@@ -4,25 +4,22 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/vricap/ssshh/database"
+	"github.com/vricap/ssshh/models"
 )
-
-type Message struct {
-	Text string `json:"text"`
-	User string `json:"user"`
-}
 
 type WebSocketServer struct {
 	clients   map[*websocket.Conn]bool
-	broadcast chan *Message
+	broadcast chan *models.Message
 }
 
 func NewWebSocket() *WebSocketServer {
 	return &WebSocketServer{
 		clients:   make(map[*websocket.Conn]bool),
-		broadcast: make(chan *Message),
+		broadcast: make(chan *models.Message),
 	}
 }
 
@@ -42,14 +39,15 @@ func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn) {
 		}
 
 		// send the message to the broadcast channel
-		var message *Message
+		var message *models.Message
 		err = json.Unmarshal(msg, &message)
 		if err != nil {
 			log.Fatal("Error Unmarshalling")
 		}
 		s.broadcast <- message
 
-		// dbCtx := database.GetDBContext()
+		// fill the created_at field and store to DB
+		message.CreatedAt = time.Now().UTC().Format("2006-01-02 15:04:05")
 		err = storeMessageToDB(database.DbCtx.DB, message)
 		if err != nil {
 			log.Fatalf("Failed to store message to database: %v", err)
@@ -77,7 +75,7 @@ func (s *WebSocketServer) HandleMessage() {
 	}
 }
 
-func marshalMessage(msg *Message) ([]byte, error) {
+func marshalMessage(msg *models.Message) ([]byte, error) {
 	s, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -85,7 +83,7 @@ func marshalMessage(msg *Message) ([]byte, error) {
 	return s, nil
 }
 
-func storeMessageToDB(DB *sql.DB, message *Message) error {
+func storeMessageToDB(DB *sql.DB, message *models.Message) error {
 	query := `
 	INSERT INTO messages (message, user) VALUES (?, ?)`
 

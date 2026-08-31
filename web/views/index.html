@@ -32,8 +32,12 @@
     const submitBtn = document.getElementById("submitBtn")
     const usernameInput = document.getElementById("usernameInput")
 
-    console.log(`{{ .Public_WSURL }}/messages`)
-    fetch(`{{ .Public_URL }}/messages`)
+    // console.log(`{{ .Public_WSURL }}/messages`)
+    fetch(`/messages`, {
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+      },
+    })
       .then(res => {
       if(!res.ok) {
         return new Error(`HTTP error! status: ${res.status}`)

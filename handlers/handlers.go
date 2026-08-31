@@ -38,6 +38,7 @@ func GetAllMessages(ctx *fiber.Ctx) error {
 			log.Fatalf("Error scanning rows: %v", err)
 			return err
 		}
+		msg.CreatedAt, err = utils.FormatTimestamp(msg.CreatedAt)
 		messages = append(messages, msg)
 	}
 

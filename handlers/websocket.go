@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 	"github.com/vricap/ssshh/database"
 	"github.com/vricap/ssshh/models"
+	"github.com/vricap/ssshh/utils"
 )
 
 type WebSocketServer struct {
@@ -58,6 +59,7 @@ func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn) {
 func (s *WebSocketServer) HandleMessage() {
 	for {
 		msg := <-s.broadcast
+		msg.CreatedAt, _ = utils.FormatTimestamp(msg.CreatedAt)
 
 		// send the message to all Clients
 		for client := range s.clients {

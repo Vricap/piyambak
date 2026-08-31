@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"database/sql"
@@ -6,7 +6,13 @@ import (
 	"log"
 
 	"github.com/gofiber/websocket/v2"
+	"github.com/vricap/ssshh/database"
 )
+
+type Message struct {
+	Text string `json:"text"`
+	User string `json:"user"`
+}
 
 type WebSocketServer struct {
 	clients   map[*websocket.Conn]bool
@@ -20,7 +26,7 @@ func NewWebSocket() *WebSocketServer {
 	}
 }
 
-func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn, DB *sql.DB) {
+func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn) {
 	// register new client
 	s.clients[ctx] = true // FIX: RACE CONDITION ISSUE. HandleMessage could write to the map when at the same time we write new user to the map. Use MUTEX
 	defer func() {
@@ -43,7 +49,8 @@ func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn, DB *sql.DB) {
 		}
 		s.broadcast <- message
 
-		err = storeMessageToDB(DB, message)
+		// dbCtx := database.GetDBContext()
+		err = storeMessageToDB(database.DbCtx.DB, message)
 		if err != nil {
 			log.Fatalf("Failed to store message to database: %v", err)
 		}

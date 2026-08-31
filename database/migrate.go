@@ -2,10 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"log"
 )
 
-func RunMigrations(DB *sql.DB) {
+func RunMigrations(DB *sql.DB) error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS messages (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,6 +15,7 @@ func RunMigrations(DB *sql.DB) {
 
 	_, err := DB.Exec(schema)
 	if err != nil {
-		log.Fatalf("Error create table: %v", err)
+		return err
 	}
+	return nil
 }

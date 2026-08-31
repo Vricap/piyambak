@@ -2,18 +2,25 @@ package database
 
 import (
 	"database/sql"
-	"log"
 )
 
-var DB *sql.DB
+type dbContext struct {
+	DB *sql.DB
+}
 
-func Connect() *sql.DB {
+var DbCtx *dbContext
+
+func Connect() (*sql.DB, error) {
 	var err error
 
-	DB, err := sql.Open("sqlite3", "./chat.db")
+	DB, err := sql.Open("sqlite3", "./database/chat.db")
 	if err != nil {
-		log.Fatalf("Failed to load database: %v", err)
+		return nil, err
 	}
 
-	return DB
+	DbCtx = &dbContext{
+		DB,
+	}
+
+	return DB, nil
 }

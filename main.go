@@ -1,17 +1,14 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/template/html/v2"
-	"github.com/gofiber/websocket/v2"
 	"github.com/joho/godotenv"
 	"github.com/vricap/ssshh/database"
-	"golang.ngrok.com/ngrok/v2"
+	"github.com/vricap/ssshh/routes"
+	"github.com/vricap/ssshh/utils"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -25,62 +22,29 @@ func main() {
 		log.Fatalf("Failed to load .env file: %v", err)
 	}
 
-	DB := database.Connect()
-	database.RunMigrations(DB)
+	DB, err := database.Connect()
+	if err != nil {
+		log.Fatalf("Failed to load database: %v", err)
+	}
+
+	err = database.RunMigrations(DB)
+	if err != nil {
+		log.Fatalf("Error running database migrations: %v", err)
+	}
 	defer DB.Close()
 
 	// run ngrok
-	ctx := context.Background()
-	forwardHTTPSUrl, err := runNgrok(ctx)
+	err = utils.StartNgrok(HOST, PORT)
 	if err != nil {
 		log.Fatalf("Error running ngrok: %v", err)
 	}
 
+	// setup gofiber
 	app := fiber.New(fiber.Config{
-		Views: html.New("./views", ".html"),
+		Views: html.New("./web/views", ".html"),
 	})
-
-	app.Static("/static", "./static")
-
-	app.Get("/ping", func(ctx *fiber.Ctx) error {
-		fmt.Println("ping")
-		return ctx.SendString("Welcome to fiber\n")
-	})
-
-	appHandler := NewHandler()
-
-	app.Get("/", appHandler.HandlerGetIndex(forwardHTTPSUrl))
-
-	// create new websocket
-	server := NewWebSocket()
-	app.Get("/ws", websocket.New(func(ctx *websocket.Conn) {
-		server.HandleWebSocket(ctx, DB)
-	}))
-
-	go server.HandleMessage()
+	app.Static("/static", "./web/static")
+	routes.SetupRoutes(app)
 
 	app.Listen(PORT)
-}
-
-func runNgrok(ctx context.Context) (string, error) {
-	n := os.Getenv("NGROK_AUTHTOKEN")
-	if n == "" {
-		log.Fatalln("NGROK_AUTHTOKEN not found. Make sure to include it in the .env file and provide valid NGROK auth token key.")
-	}
-
-	agent, err := ngrok.NewAgent(ngrok.WithAuthtoken(os.Getenv("NGROK_AUTHTOKEN")))
-	if err != nil {
-		return "", err
-	}
-
-	ln, err := agent.Forward(ctx,
-		ngrok.WithUpstream(HOST+PORT),
-	)
-
-	if err != nil {
-		return "", err
-	}
-
-	fmt.Println("Endpoint online: forwarding from", ln.URL(), "to", HOST+PORT)
-	return ln.URL().String(), nil
 }

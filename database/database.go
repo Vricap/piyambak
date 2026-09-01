@@ -13,7 +13,7 @@ var DbCtx *dbContext
 func Connect() (*sql.DB, error) {
 	var err error
 
-	DB, err := sql.Open("sqlite3", "./database/chat.db")
+	DB, err := sql.Open("sqlite3", "./database/chat.db?_foreign_keys=on")
 	if err != nil {
 		return nil, err
 	}

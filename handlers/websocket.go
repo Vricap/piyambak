@@ -12,23 +12,33 @@ import (
 	"github.com/vricap/ssshh/utils"
 )
 
+type Room struct {
+	Clients   map[*websocket.Conn]bool
+	Broadcast chan *models.Message
+}
+
 type WebSocketServer struct {
-	clients   map[*websocket.Conn]bool
-	broadcast chan *models.Message
+	Rooms map[string]*Room
 }
 
 func NewWebSocket() *WebSocketServer {
 	return &WebSocketServer{
-		clients:   make(map[*websocket.Conn]bool),
-		broadcast: make(chan *models.Message),
+		Rooms: make(map[string]*Room),
+		// Broadcast: make(chan *models.Message),
 	}
 }
 
-func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn) {
-	// register new client
-	s.clients[ctx] = true // FIX: RACE CONDITION ISSUE. HandleMessage could write to the map when at the same time we write new user to the map. Use MUTEX
+func (s *WebSocketServer) JoinRoom(roomID string, ctx *websocket.Conn) {
+	if s.Rooms[roomID] == nil { // not initializing already exist room
+		s.Rooms[roomID] = &Room{
+			Clients:   make(map[*websocket.Conn]bool),
+			Broadcast: make(chan *models.Message),
+		}
+	}
+	// register new client to room
+	s.Rooms[roomID].Clients[ctx] = true // FIX: RACE CONDITION ISSUE. HandleMessage could write to the map when at the same time we write new user to the map. Use MUTEX
 	defer func() {
-		delete(s.clients, ctx)
+		delete(s.Rooms[roomID].Clients, ctx)
 		ctx.Close()
 	}()
 
@@ -38,32 +48,34 @@ func (s *WebSocketServer) HandleWebSocket(ctx *websocket.Conn) {
 			log.Println("Read Error:", err)
 			break
 		}
-
-		// send the message to the broadcast channel
+		// send the message to the Broadcast channel
 		var message *models.Message
 		err = json.Unmarshal(msg, &message)
 		if err != nil {
-			log.Fatal("Error Unmarshalling")
+			log.Println("Error Unmarshalling: %v", err)
+			break
 		}
-		s.broadcast <- message
+
+		s.Rooms[roomID].Broadcast <- message
 
 		// fill the created_at field and store to DB
 		message.CreatedAt = time.Now().UTC().Format("2006-01-02 15:04:05")
 		err = storeMessageToDB(database.DbCtx.DB, message)
 		if err != nil {
-			log.Fatalf("Failed to store message to database: %v", err)
+			log.Printf("Failed to store message to database: %v\n", err)
+			break
 		}
 	}
 }
 
-func (s *WebSocketServer) HandleMessage() {
+func (s *WebSocketServer) Broadcast(roomID string) {
 	for {
-		msg := <-s.broadcast
+		msg := <-s.Rooms[roomID].Broadcast
 		msg.CreatedAt, _ = utils.FormatTimestamp(msg.CreatedAt)
 
 		// send the message to all Clients
-		for client := range s.clients {
-			msg, err := marshalMessage(msg)
+		for client := range s.Rooms[roomID].Clients {
+			msg, err := MarshalMessage(msg)
 			if err != nil {
 				log.Printf("Error marshaling message: %v", err)
 			}
@@ -71,13 +83,13 @@ func (s *WebSocketServer) HandleMessage() {
 			if err != nil {
 				log.Printf("Write Error: %v", err)
 				client.Close()
-				delete(s.clients, client)
+				delete(s.Rooms[roomID].Clients, client)
 			}
 		}
 	}
 }
 
-func marshalMessage(msg *models.Message) ([]byte, error) {
+func MarshalMessage(msg *models.Message) ([]byte, error) {
 	s, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -87,9 +99,9 @@ func marshalMessage(msg *models.Message) ([]byte, error) {
 
 func storeMessageToDB(DB *sql.DB, message *models.Message) error {
 	query := `
-	INSERT INTO messages (message, user) VALUES (?, ?)`
+	INSERT INTO messages (message, user, room_id) VALUES (?, ?, ?)`
 
-	_, err := DB.Exec(query, message.Text, message.User)
+	_, err := DB.Exec(query, message.Text, message.User, message.RoomId)
 	if err != nil {
 		return err
 	}

@@ -1,92 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Room</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Home</title>
 </head>
-
 <body>
-    <p>Public URL: {{ .Public_URL }}</p>
-    <input id="usernameInput" type="text">
-    <div class="container">
-        <div class="chat-window">
-            <div class="messages" id="messages">
-            </div>
-            <form id="form">
-                <div class="input-area">
-                    <input type="text" name="text" min="1" id="messageInput" placeholder="Type a message...">
-                </div>
-                <button disabled class="submitBtn" id="submitBtn" type="submit">Send</button>
-            </form>
-        </div>
+    <form id="form">
+        <label for="name">Enter Room Name</label>
+        <input id="name" name="name" type="text" required>
+        <label for="password">Enter Room Password</label>
+        <input id="password" name="password" type="password" placeholder="optional">
+        <button type="submit">Enter</button>
+    </form>
+
+    <div id="rooms" class="rooms">
+        {{ range .Rooms }}
+          <form action="/rooms/{{ .ID }}" method="POST" class="roomForm">
+            <span>
+              Room Name {{ .Name }} ({{ .CreatedAt }})
+            </span>
+
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter password of the room"
+            >
+
+            <button type="submit">JOIN</button>
+          </form>
+        {{ end }}
     </div>
     <script>
-    const form = document.getElementById("form");
-    const messageInput = document.getElementById("messageInput");
-    const messages = document.getElementById("messages")
-    const submitBtn = document.getElementById("submitBtn")
-    const usernameInput = document.getElementById("usernameInput")
-
-    // console.log(`{{ .Public_WSURL }}/messages`)
-    fetch(`/messages`, {
-      headers: {
-        "ngrok-skip-browser-warning": "true",
-      },
-    })
-      .then(res => {
-      if(!res.ok) {
-        return new Error(`HTTP error! status: ${res.status}`)
-      }
-      return res.json()
-    }).then(data => {
-      data.forEach(object => {
-        const messageChild = document.createElement("p")
-        messageChild.textContent = `From ${object.user}: ${object.text} (${object.createdAt})`
-        messages.appendChild(messageChild)
-      })
-    })
-      .catch(err => console.error(err))
-
-    usernameInput.addEventListener("change", () => {
-      console.log(usernameInput.value)
-
-      if (usernameInput.value === "") {
-        submitBtn.disabled = true
-      } else {
-        submitBtn.disabled = false
-      }
-    })
-
-
-    const socket = new WebSocket("{{ .Public_WSURL }}/ws");
-    socket.onopen = () => {
-      console.log("Socket Open")
-    };
-
-    socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      const messageChild = document.createElement("p")
-      messageChild.textContent = `From ${message.user}: ${message.text} (${message.createdAt})`
-      messages.appendChild(messageChild)
-
-    };
+    const form = document.getElementById("form")
+    const name = document.getElementById("name")
+    const password = document.getElementById("password")
 
     form.addEventListener("submit", (e) => {
       e.preventDefault() // because by default it send http request
 
-      socket.send(
-        JSON.stringify({
-          text: messageInput.value,
-          user: usernameInput.value
-        })
-      )
-    })
+      const data = {
+        "name": name.value,
+        "password": password.value
+      }
 
+      fetch("/rooms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if(response.redirected) {
+          window.location.reload()
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    })
     </script>
 </body>
 </html>

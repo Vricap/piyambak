@@ -91,7 +91,6 @@ independent chat server.
 piyambak/
 ├── main.go                 # Application entrypoint
 ├── go.mod
-├── go.sum
 ├── .env                    # environment file
 ├── database/
 │   ├── database.go         # SQLite connection and initialization

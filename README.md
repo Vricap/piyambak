@@ -89,17 +89,26 @@ independent chat server.
 
 ```text
 piyambak/
-├── cmd/                # Application entrypoint
-├── internal/
-│   ├── chat/           # Chat room & message logic
-│   ├── websocket/      # WebSocket handlers
-│   ├── database/       # SQLite connection
-│   └── ngrok/          # Ngrok tunnel initialization
-├── views/              # HTML templates
-├── public/             # Static assets
-├── chat.db             # SQLite database (generated)
+├── main.go                 # Application entrypoint
 ├── go.mod
-└── main.go
+├── go.sum
+├── .env                    # environment file
+├── database/
+│   ├── database.go         # SQLite connection and initialization
+│   ├── migrate.go          # Database schema migration
+│   └── chat.db             # SQLite database (generated locally)
+├── handlers/               # Routes handlers for both REST and websocket
+├── models/                 # Database models and data structures
+├── routes/
+│   ├── app.go              # Fiber application setup
+│   ├── routes.go           # HTTP routes
+│   └── websocket.go        # WebSocket routes
+├── utils/
+│   ├── ngrok.go            # Ngrok tunnel initialization
+│   └── utils.go            # Helper utilities
+├── web/
+│   ├── static/             # CSS assets
+│   └── views/              # HTML templates
 ```
 
 ---
@@ -109,7 +118,7 @@ piyambak/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/piyambak.git
+git clone https://github.com/vricap/piyambak.git
 cd piyambak
 ```
 

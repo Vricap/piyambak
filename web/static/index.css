@@ -1,0 +1,142 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Tahoma, Verdana, sans-serif;
+    background: linear-gradient(#314c7a, #18253f);
+    color: #f1f1f1;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Main window */
+.window {
+    width: 360px;
+    background: #d6dbe5;
+    border: 2px solid #ffffff;
+    border-right-color: #666;
+    border-bottom-color: #666;
+    color: black;
+    box-shadow: 0 0 25px rgba(0,0,0,.5);
+}
+
+/* Fake window title */
+.titlebar {
+    background: linear-gradient(#2e63b8,#1c3f77);
+    color: white;
+    padding: 8px 10px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.window-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.window-buttons div {
+    width: 14px;
+    height: 14px;
+    border: 1px solid rgba(255,255,255,.7);
+    background: rgba(255,255,255,.25);
+}
+
+.content {
+    padding: 24px;
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo h1 {
+    font-size: 34px;
+    letter-spacing: 4px;
+    color: #244884;
+    text-shadow: 1px 1px white;
+}
+
+.logo p {
+    color: #555;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 9px;
+    font-size: 14px;
+    border: 2px inset #fff;
+    background: white;
+    margin-bottom: 14px;
+    font-family: Tahoma, sans-serif;
+}
+
+input:focus {
+    outline: none;
+    border: 2px inset #7aa7e9;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    font-family: Tahoma, sans-serif;
+    background: linear-gradient(#efefef,#bcbcbc);
+    border: 2px outset white;
+    cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+    background: linear-gradient(#ffffff,#d6d6d6);
+}
+
+button:active:not(:disabled) {
+    border: 2px inset #fff;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    color: #666;
+    background: #c8c8c8;
+}
+
+.info {
+    margin-top: 18px;
+    font-size: 11px;
+    color: #444;
+    line-height: 1.5;
+    border-top: 1px solid #999;
+    padding-top: 10px;
+}
+
+.status {
+    margin-top: 14px;
+    font-size: 11px;
+    color: green;
+}
+
+.footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 10px;
+    background: #c4cad6;
+    border-top: 1px solid #888;
+    color: #555;
+}

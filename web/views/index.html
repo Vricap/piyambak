@@ -1,58 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Piyambak - Home</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piyambak // Home</title>
+<link rel="stylesheet" href="/static/index.css">
+
 </head>
 <body>
-    <h1>PIYAMBAK</h1>
-    <label for="username-input">Chat as:</label>
-    <input name="username-input" id="username-input" type="text" placeholder="Enter Username" required>
-    <button disabled id="btn" >Continue...</button>
+<div class="window">
+
+    <div class="titlebar">
+        <span>Piyambak</span>
+
+        <div class="window-buttons">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="logo">
+            <h1>PIYAMBAK</h1>
+            <p>Anonymous Self-Hosted Chat Network</p>
+        </div>
+
+        <label for="username-input">Chat as:</label>
+        <input
+            id="username-input"
+            type="text"
+            placeholder="Enter Username..."
+            maxlength="20"
+            autocomplete="off"
+            required
+        >
+        <button id="btn" disabled>Connect to Lobby →</button>
+        <!--<div class="status">
+            ● Ready to connect via ngrok tunnel.
+        </div>-->
+        <div class="info">
+            <b>Welcome.</b><br>
+            No registration. No email. No profile.<br>
+            Pick a username and join any available room.
+        </div>
+    </div>
+    <div class="footer">
+        <a href="https://github.com/Vricap/piyambak">https://github.com/Vricap/piyambak</a>
+    </div>
+</div>
+
 <script>
-  const usernameInput = document.getElementById("username-input")
-  const bnt = document.getElementById("btn")
-  usernameInput.addEventListener("change", (e) => {
-    e.preventDefault()
-    if(usernameInput.value) {
-      btn.disabled = false
-    } else {
-      btn.disabled = true
-    }
-  })
+const usernameInput = document.getElementById("username-input");
+const btn = document.getElementById("btn");
 
-  let username = localStorage.getItem("username")
-  if(username) {
-    btn.disabled = false
-    usernameInput.value = username
-  }
+// Enable button while typing.
+usernameInput.addEventListener("input", () => {
+    btn.disabled = usernameInput.value.trim() === "";
+});
 
-  function generateUserTag(length = 6) {
+let username = localStorage.getItem("username");
+
+if (username) {
+    usernameInput.value = username.split("#")[0];
+    btn.disabled = false;
+}
+
+function generateUserTag(length = 6) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     const bytes = new Uint8Array(length);
     crypto.getRandomValues(bytes);
 
     return Array.from(bytes, b => chars[b % chars.length]).join("");
-  }
+}
 
-  btn.addEventListener("click", (e) => {
-    e.preventDefault()
+btn.addEventListener("click", (e) => {
+    e.preventDefault();
 
-    if(!usernameInput) {
-      alert("Enter username first!")
+    const name = usernameInput.value.trim();
+
+    if (!name) {
+        alert("Enter username first!");
+        return;
     }
 
-    let username = localStorage.getItem("username")
-    if(!username) {
-      username = `${usernameInput.value}#${generateUserTag()}`;
-      localStorage.setItem("username", username)
+    let username = localStorage.getItem("username");
+
+    if (!username) {
+        username = `${name}#${generateUserTag()}`;
+        localStorage.setItem("username", username);
     }
 
     window.location.href = "/rooms";
-    return
-  })
+});
 
+// Press Enter to continue.
+usernameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !btn.disabled) {
+        btn.click();
+    }
+});
 </script>
+
 </body>
 </html>

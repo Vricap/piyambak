@@ -15,7 +15,7 @@ func Index(ctx *fiber.Ctx) error {
 }
 
 func GetAllRooms(ctx *fiber.Ctx) error {
-	rows, err := database.DbCtx.DB.Query(`SELECT * FROM rooms ORDER BY created_at ASC;`)
+	rows, err := database.DbCtx.DB.Query(`SELECT * FROM rooms ORDER BY created_at DESC;`)
 	if err != nil {
 		log.Fatalf("Error querying database: %v", err)
 		return err
@@ -41,10 +41,12 @@ func GetAllRooms(ctx *fiber.Ctx) error {
 		})
 	}
 
+	forwardHTTPSUrl := utils.NgroxCtx.Url
 	context := fiber.Map{
-		"Rooms": rooms,
+		"Rooms":      rooms,
+		"Public_URL": forwardHTTPSUrl,
 	}
-	return ctx.Render("rooms", context)
+	return ctx.Render("lobby", context)
 }
 
 func GetRoom(ctx *fiber.Ctx) error {
@@ -85,7 +87,7 @@ func GetRoom(ctx *fiber.Ctx) error {
 		"RoomName":     room.Name,
 		"UserName":     userName,
 	}
-	return ctx.Render("chatRoom", context)
+	return ctx.Render("room", context)
 }
 
 func CreateRoom(ctx *fiber.Ctx) error {

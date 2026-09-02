@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piyambak // {{ .RoomName }}</title>
+<link rel="stylesheet" href="/static/room.css">
+
+</head>
+
+<body>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button class="back-btn" onclick="window.location.href='/rooms'">
+                ◀ Lobby
+            </button>
+
+            <span>💬 PIYAMBAK #{{ .RoomName }} — Room</span>
+        </div>
+
+        <div class="title-buttons">
+            <div></div><div></div><div></div>
+        </div>
+    </div>
+
+    <div class="room-info">
+        <div><b>Room:</b> {{ .RoomName }}</div>
+        <div><b>Created at:</b> {{ .CreatedAt }}</div>
+        <div><b>By:</b> {{ .Author }}</div>
+    </div>
+
+    <div class="chat-layout">
+
+        <aside class="sidebar">
+
+            <h3>Your Identity</h3>
+
+            <div class="user-card">
+                <b>{{ .UserName }}</b>
+                <div style="font-size:11px;color:green;margin-top:4px;">
+                    ● Connected
+                </div>
+            </div>
+
+            <!--<h3>Online</h3>
+
+            <div class="online-list" id="onlineList">
+                <div class="online-user">
+                    <div class="dot"></div>
+                    <span>{{ .UserName }}</span>
+                </div>
+            </div>-->
+
+        </aside>
+
+        <main class="chat-area">
+
+            <div class="messages" id="messages">
+                <div class="system">
+                    --- Joined room "{{ .RoomName }}" ---
+                </div>
+            </div>
+
+            <div class="input-panel">
+
+                <form id="form">
+
+                    <input
+                        id="messageInput"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Type message..."
+                    >
+
+                    <button id="submitBtn" type="submit">
+                        Send
+                    </button>
+
+                </form>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <div class="statusbar">
+        <span id="connectionStatus" class="connected">
+            ● Connected to WebSocket
+        </span>
+
+        <span>
+            PIYAMBAK
+        </span>
+    </div>
+
+</div>
+
+<script>
+const form = document.getElementById("form");
+const messageInput = document.getElementById("messageInput");
+const messages = document.getElementById("messages");
+const connectionStatus = document.getElementById("connectionStatus");
+
+function addMessage(user,text,time){
+
+    const div = document.createElement("div");
+    div.className = "message";
+
+    div.innerHTML = `
+        <span class="time">[${time}]</span>
+        <span class="user">${user}:</span>
+        ${text}
+    `;
+
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+// Load history
+
+fetch(`/messages/{{ .RoomID }}`,{
+    headers:{
+        "ngrok-skip-browser-warning":"true"
+    }
+})
+.then(r=>r.json())
+.then(history=>{
+    history.forEach(msg=>{
+        addMessage(msg.user,msg.text,msg.createdAt);
+    });
+});
+
+// WebSocket
+
+const socket = new WebSocket("{{ .Public_WSURL }}/ws/rooms/{{ .RoomID }}");
+
+socket.onopen = ()=>{
+    connectionStatus.textContent = "● Connected to WebSocket";
+    connectionStatus.className = "connected";
+};
+
+socket.onclose = ()=>{
+    connectionStatus.textContent = "● Connection Closed";
+    connectionStatus.className = "disconnected";
+};
+
+socket.onerror = ()=>{
+    connectionStatus.textContent = "● Connection Error";
+    connectionStatus.className = "disconnected";
+};
+
+socket.onmessage = (event)=>{
+    const msg = JSON.parse(event.data);
+    addMessage(msg.user,msg.text,msg.createdAt);
+};
+
+// Send
+
+form.addEventListener("submit",(e)=>{
+    e.preventDefault();
+
+    const text = messageInput.value.trim();
+
+    if(!text) return;
+
+    socket.send(JSON.stringify({
+        text:text,
+        user:"{{ .UserName }}",
+        roomId:"{{ .RoomID }}"
+    }));
+
+    messageInput.value="";
+    messageInput.focus();
+});
+
+messageInput.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter"){
+        form.requestSubmit();
+    }
+});
+</script>
+
+</body>
+</html>

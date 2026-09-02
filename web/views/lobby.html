@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piyambak // Lobby</title>
+<link rel="stylesheet" href="/static/lobby.css">
+
+</head>
+
+<body>
+
+<div class="window">
+
+    <div class="titlebar">
+        <span>PIYAMBAK Lobby</span>
+
+        <div class="window-buttons">
+            <div></div><div></div><div></div>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <div class="banner">
+            <strong>Public URL:</strong> {{ .Public_URL }}
+            <small>Invite other people with this link.</small>
+        </div>
+
+        <!-- CREATE ROOM -->
+        <div class="create-box">
+            <h2>Create New Room</h2>
+
+            <form id="form">
+
+                <label for="name">Room Name</label>
+                <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="example: chilling"
+                    required
+                >
+
+                <label for="password">Password (optional)</label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Leave empty for public room."
+                >
+
+                <button type="submit">Create Room</button>
+
+            </form>
+        </div>
+
+        <!-- ROOM LIST -->
+        <div class="rooms-title">
+            Available Chat Rooms
+        </div>
+
+        <div id="rooms" class="rooms">
+
+            {{ range .Rooms }}
+
+            <form action="/rooms/{{ .ID }}/join" method="POST" class="roomForm">
+
+                <div class="room-info">
+
+                    <span class="room-name">
+                        💬 {{ .Name }}
+                    </span>
+
+                    <span class="room-meta">
+                        Created {{ .CreatedAt }}
+                    </span>
+
+                    {{ if .Password }}
+                        <span class="badge lock">🔒 Password Required</span>
+                    {{ else }}
+                        <span class="badge open">🌐 Public Room</span>
+                    {{ end }}
+
+                </div>
+
+                <div class="join-box">
+
+                    {{ if .Password }}
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Room password"
+                    >
+                    {{ end }}
+
+                    <input
+                        type="hidden"
+                        name="username"
+                        class="usernameInput"
+                    >
+
+                    <button type="submit">
+                        Join »
+                    </button>
+
+                </div>
+
+            </form>
+
+            {{ end }}
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <span class="status">● ONLINE</span>
+        <span>PIYAMBAK Lobby</span>
+        <a href="https://github.com/Vricap/piyambak">github</a>
+    </div>
+
+</div>
+
+<script>
+const form = document.getElementById("form");
+const name = document.getElementById("name");
+const password = document.getElementById("password");
+
+const userName = localStorage.getItem("username");
+
+if (!userName) {
+    alert("Username not found. Please enter a username first.");
+    window.location.href = "/";
+}
+
+// Inject username into every join request.
+document.querySelectorAll(".roomForm").forEach(roomForm => {
+    roomForm.addEventListener("submit", () => {
+        roomForm.querySelector(".usernameInput").value = userName;
+    });
+});
+
+// Create room.
+form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const data = {
+        name: name.value,
+        password: password.value,
+        author: userName
+    };
+
+    fetch("/rooms", {
+        method: "POST",
+        headers: {
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if(response.redirected || response.ok){
+            window.location.reload();
+        }
+    })
+    .catch(console.error);
+});
+</script>
+
+</body>
+</html>

@@ -10,6 +10,8 @@ entirely on your local machine and becomes publicly accessible through an
 No accounts. No email. No registration. Just enter a username and start
 chatting.
 
+![piyambak demo](./resources/piyambak-demo.gif)
+
 ---
 
 ## ✨ Features

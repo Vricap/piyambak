@@ -9,9 +9,9 @@ import (
 	"github.com/gofiber/template/html/v2"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/vricap/ssshh/database"
-	"github.com/vricap/ssshh/routes"
-	"github.com/vricap/ssshh/utils"
+	"github.com/vricap/piyambak/database"
+	"github.com/vricap/piyambak/routes"
+	"github.com/vricap/piyambak/utils"
 )
 
 const HOST = "http://localhost"

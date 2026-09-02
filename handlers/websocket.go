@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gofiber/websocket/v2"
-	"github.com/vricap/ssshh/database"
-	"github.com/vricap/ssshh/models"
-	"github.com/vricap/ssshh/utils"
+	"github.com/vricap/piyambak/database"
+	"github.com/vricap/piyambak/models"
+	"github.com/vricap/piyambak/utils"
 )
 
 type Room struct {

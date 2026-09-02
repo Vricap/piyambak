@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/vricap/ssshh/database"
-	"github.com/vricap/ssshh/models"
-	"github.com/vricap/ssshh/utils"
+	"github.com/vricap/piyambak/database"
+	"github.com/vricap/piyambak/models"
+	"github.com/vricap/piyambak/utils"
 )
 
 func GetAllRooms(ctx *fiber.Ctx) error {

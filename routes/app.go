@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/vricap/ssshh/handlers"
+	"github.com/vricap/piyambak/handlers"
 )
 
 func SetupAppRoutes(app *fiber.App) {

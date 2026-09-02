@@ -14,7 +14,7 @@ chatting.
 
 ---
 
-## ✨ Features
+## Features
 
 - **Real-time messaging** powered by WebSockets.
 - **Deployless public access** using the Ngrok SDK.
@@ -232,13 +232,3 @@ Piyambak is built around a few simple ideas:
 - [ ] Ephemeral rooms with automatic expiration.
 
 ---
-
-## License
-
-MIT License.
-
----
-
-## Author
-
-Built by **Vricap**.

@@ -11,8 +11,10 @@
 </head>
 
 <body>
-    <p>Public URL: {{ .Public_URL }}</p>
-    <input id="usernameInput" type="text">
+    <span>You are: {{ .UserName }}</span>
+    <span>Room name: {{ .RoomName }}</span>
+    <span>Room created at: {{ .CreatedAt }}</span>
+    <span>Room created by: {{ .Author }}</span>
     <div class="container">
         <div class="chat-window">
             <div class="messages" id="messages">
@@ -21,7 +23,7 @@
                 <div class="input-area">
                     <input type="text" name="text" min="1" id="messageInput" placeholder="Type a message...">
                 </div>
-                <button disabled class="submitBtn" id="submitBtn" type="submit">Send</button>
+                <button class="submitBtn" id="submitBtn" type="submit">Send</button>
             </form>
         </div>
     </div>
@@ -30,7 +32,6 @@
     const messageInput = document.getElementById("messageInput");
     const messages = document.getElementById("messages")
     const submitBtn = document.getElementById("submitBtn")
-    const usernameInput = document.getElementById("usernameInput")
 
     // console.log(`{{ .Public_WSURL }}/messages`)
     fetch(`/messages/{{ .RoomID }}`, {
@@ -54,16 +55,6 @@
     })
       .catch(err => console.error(err))
 
-    usernameInput.addEventListener("change", () => {
-
-      if (usernameInput.value === "") {
-        submitBtn.disabled = true
-      } else {
-        submitBtn.disabled = false
-      }
-    })
-
-
     const socket = new WebSocket("{{ .Public_WSURL }}/ws/rooms/{{ .RoomID }}");
     socket.onopen = () => {
       console.log("Socket Open")
@@ -82,7 +73,7 @@
       socket.send(
         JSON.stringify({
           text: messageInput.value,
-          user: usernameInput.value,
+          user: "{{ .UserName }}",
           roomId: "{{ .RoomID }}"
         })
       )

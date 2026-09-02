@@ -10,6 +10,10 @@ import (
 	"github.com/vricap/piyambak/utils"
 )
 
+func Index(ctx *fiber.Ctx) error {
+	return ctx.Render("index", "")
+}
+
 func GetAllRooms(ctx *fiber.Ctx) error {
 	rows, err := database.DbCtx.DB.Query(`SELECT * FROM rooms ORDER BY created_at ASC;`)
 	if err != nil {
@@ -22,7 +26,7 @@ func GetAllRooms(ctx *fiber.Ctx) error {
 
 	for rows.Next() {
 		var room models.Room
-		err := rows.Scan(&room.ID, &room.Name, &room.Password, &room.CreatedAt)
+		err := rows.Scan(&room.ID, &room.Author, &room.Name, &room.Password, &room.CreatedAt)
 		if err != nil {
 			log.Printf("Error scanning rows: %v", err)
 			return ctx.Status(500).SendString("Error getting rooms.")
@@ -40,25 +44,32 @@ func GetAllRooms(ctx *fiber.Ctx) error {
 	context := fiber.Map{
 		"Rooms": rooms,
 	}
-	return ctx.Render("index", context)
+	return ctx.Render("rooms", context)
 }
 
 func GetRoom(ctx *fiber.Ctx) error {
 	roomID := ctx.Params("id")
 	inputPassword := ctx.FormValue("password")
+	userName := ctx.FormValue("username")
 
-	var dbPassword string
+	if userName == "" {
+		return ctx.Status(fiber.StatusUnauthorized).SendString("Must enter a username first before joining a room.")
+	}
+
+	var room models.Room
 
 	err := database.DbCtx.DB.QueryRow(
-		`SELECT password FROM rooms WHERE id = ?`,
+		`SELECT id, author, name, password, created_at FROM rooms WHERE id = ?`,
 		roomID,
-	).Scan(&dbPassword)
+	).Scan(&room.ID, &room.Author, &room.Name, &room.Password, &room.CreatedAt)
+
+	// fmt.
 
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).SendString("Room not found")
 	}
 
-	if inputPassword != dbPassword {
+	if inputPassword != room.Password {
 		return ctx.Status(fiber.StatusUnauthorized).SendString("Incorrect password")
 	}
 
@@ -68,7 +79,11 @@ func GetRoom(ctx *fiber.Ctx) error {
 	context := fiber.Map{
 		"Public_URL":   forwardHTTPSUrl, // for user
 		"Public_WSURL": publicWSURL,     // for request
-		"RoomID":       roomID,
+		"RoomID":       room.ID,
+		"CreatedAt":    room.CreatedAt,
+		"Author":       room.Author,
+		"RoomName":     room.Name,
+		"UserName":     userName,
 	}
 	return ctx.Render("chatRoom", context)
 }
@@ -81,7 +96,7 @@ func CreateRoom(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	_, err = database.DbCtx.DB.Exec(`INSERT INTO rooms (name, password) VALUES (?, ?);`, room.Name, room.Password)
+	_, err = database.DbCtx.DB.Exec(`INSERT INTO rooms (author, name, password) VALUES (?, ?, ?);`, room.Author, room.Name, room.Password)
 	if err != nil {
 		log.Printf("Error inserting into database: %v", err)
 		return ctx.Status(500).SendString("Error creating room.")

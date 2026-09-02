@@ -8,6 +8,7 @@ func RunMigrations(DB *sql.DB) error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS rooms (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    author TEXT,
     name TEXT NOT NULL,
     password TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP

@@ -3,62 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Piyambak - Home</title>
 </head>
 <body>
-    <form id="form">
-        <label for="name">Enter Room Name</label>
-        <input id="name" name="name" type="text" required>
-        <label for="password">Enter Room Password</label>
-        <input id="password" name="password" type="password" placeholder="optional">
-        <button type="submit">Enter</button>
-    </form>
+    <h1>PIYAMBAK</h1>
+    <label for="username-input">Chat as:</label>
+    <input name="username-input" id="username-input" type="text" placeholder="Enter Username" required>
+    <button disabled id="btn" >Continue...</button>
+<script>
+  const usernameInput = document.getElementById("username-input")
+  const bnt = document.getElementById("btn")
+  usernameInput.addEventListener("change", (e) => {
+    e.preventDefault()
+    if(usernameInput.value) {
+      btn.disabled = false
+    } else {
+      btn.disabled = true
+    }
+  })
 
-    <div id="rooms" class="rooms">
-        {{ range .Rooms }}
-          <form action="/rooms/{{ .ID }}" method="POST" class="roomForm">
-            <span>
-              Room Name {{ .Name }} ({{ .CreatedAt }})
-            </span>
+  let username = localStorage.getItem("username")
+  if(username) {
+    btn.disabled = false
+    usernameInput.value = username
+  }
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter password of the room"
-            >
+  function generateUserTag(length = 6) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
 
-            <button type="submit">JOIN</button>
-          </form>
-        {{ end }}
-    </div>
-    <script>
-    const form = document.getElementById("form")
-    const name = document.getElementById("name")
-    const password = document.getElementById("password")
+    return Array.from(bytes, b => chars[b % chars.length]).join("");
+  }
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault() // because by default it send http request
+  btn.addEventListener("click", (e) => {
+    e.preventDefault()
 
-      const data = {
-        "name": name.value,
-        "password": password.value
-      }
+    if(!usernameInput) {
+      alert("Enter username first!")
+    }
 
-      fetch("/rooms", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        if(response.redirected) {
-          window.location.reload()
-        }
-      }).catch(err => {
-        console.log(err)
-      })
-    })
-    </script>
+    let username = localStorage.getItem("username")
+    if(!username) {
+      username = `${usernameInput.value}#${generateUserTag()}`;
+      localStorage.setItem("username", username)
+    }
+
+    window.location.href = "/rooms";
+    return
+  })
+
+</script>
 </body>
 </html>

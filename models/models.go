@@ -2,6 +2,7 @@ package models
 
 type Room struct {
 	ID        string `json:"id"`
+	Author    string `json:"author"`
 	Name      string `json:"name"`
 	Password  string `json:"password"`
 	CreatedAt string `json:"createdAt"`

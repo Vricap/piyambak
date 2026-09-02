@@ -1,9 +1,27 @@
 package utils
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"time"
 )
+
+const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func GenerateUserTag() (string, error) {
+	b := make([]byte, 6)
+
+	for i := range b {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = chars[n.Int64()]
+	}
+
+	return string(b), nil
+}
 
 var WIB, _ = time.LoadLocation("Asia/Jakarta")
 
